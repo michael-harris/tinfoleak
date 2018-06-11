@@ -39,11 +39,11 @@ Tinfoleak - The most complete open-source tool for Twitter intelligence analysis
 import argparse
 import tweepy
 import sys
-import configparser
+import ConfigParser
 import datetime
 import errno
 import os
-import urllib.request, urllib.error, urllib.parse
+import urllib2
 from PIL import Image, ExifTags, ImageCms
 import exifread
 import struct
@@ -54,24 +54,24 @@ from collections import OrderedDict
 from operator import itemgetter
 from OpenSSL import SSL
 from jinja2 import Template, Environment, FileSystemLoader
-from urllib.parse import urlparse
+from urlparse import urlparse
 import re
 import csv
 import json
 import oauth2 as oauth
 import operator
 import random
-import imp
 
-imp.reload(sys)
+reload(sys)  
+sys.setdefaultencoding('utf8')
 
 # ----------------------------------------------------------------------
 def credits(parameters):
 	"""Show program credits"""
-	print(("\t" + parameters.program_name + " " + parameters.program_version + " - \"The most complete open-source tool for Twitter intelligence analysis\""))
-	print(("\t" + parameters.program_author_name + ". Twitter: " + parameters.program_author_twitter))
-	print(("\t" + parameters.program_author_companyname))
-	print(("\t" + parameters.program_date))
+	print ("\t" + parameters.program_name + " " + parameters.program_version + " - \"The most complete open-source tool for Twitter intelligence analysis\"")
+	print ("\t" + parameters.program_author_name + ". Twitter: " + parameters.program_author_twitter)
+	print ("\t" + parameters.program_author_companyname)
+	print ("\t" + parameters.program_date)
  
 # ==========================================================================
 class Configuration():
@@ -81,7 +81,7 @@ class Configuration():
 	def __init__(self):
 		try:
 			# Read tinfoleak configuration file ("tinfoleak.conf")
-			config = configparser.RawConfigParser()
+			config = ConfigParser.RawConfigParser()
 			config_path = os.path.abspath(os.path.dirname(sys.argv[0])) + '/tinfoleak.conf'
 			config.read(config_path)
 
@@ -311,16 +311,16 @@ class Lists:
 				except Exception as e:
 					rate_limit = show_error(e)
 					if rate_limit:
-						print("\t\tWaiting...")
+						print "\t\tWaiting..."
 						time.sleep(60)
 						continue
 
 
 			private_lists = listed_count - public_lists
 
-			print("\n\t\tThe user has been added to " + str(listed_count) + " lists (private: " + str(private_lists) + ", public: " + str(public_lists) + ")") 
+			print "\n\t\tThe user has been added to " + str(listed_count) + " lists (private: " + str(private_lists) + ", public: " + str(public_lists) + ")" 
 
-			print("\t\tOutput file: " + username_directory + "/" + memberships_file + "\n")
+			print "\t\tOutput file: " + username_directory + "/" + memberships_file + "\n"
 
 			csvFile.close()
 
@@ -365,7 +365,7 @@ class Lists:
 					if response['status'] != "404":
 						response_dictionary = json.loads(data)
 						if "Rate limit exceeded" in str(response_dictionary):
-							print("\n\t\tWaiting...")
+							print "\n\t\tWaiting..."
 							time.sleep(60)
 							continue
 						else:
@@ -382,13 +382,13 @@ class Lists:
 				except Exception as e:
 					rate_limit = show_error(e)
 					if rate_limit:
-						print("\t\tWaiting...")
+						print "\t\tWaiting..."
 						time.sleep(60)
 						continue
 
-			print("\t\t" + str(owner_lists) + " public lists owned by the user") 
+			print "\t\t" + str(owner_lists) + " public lists owned by the user" 
 
-			print("\t\tOutput file: " + username_directory + "/" + ownerships_file + "\n")
+			print "\t\tOutput file: " + username_directory + "/" + ownerships_file + "\n"
 
 			csvFile.close()
 
@@ -437,7 +437,7 @@ class Lists:
 					response_dictionary = json.loads(data)
 
 					if "Rate limit exceeded" in str(response_dictionary):
-						print("\n\t\tWaiting...")
+						print "\n\t\tWaiting..."
 						time.sleep(60)
 					else:
 						rate_limit = 1
@@ -451,13 +451,13 @@ class Lists:
 					except Exception as e:
 						rate_limit = show_error(e)
 						if rate_limit:
-							print("\t\tWaiting...")
+							print "\t\tWaiting..."
 							time.sleep(60)
 							continue
 
-			print("\t\tUser subscribed to " + str(user_lists) + " lists")
+			print "\t\tUser subscribed to " + str(user_lists) + " lists"
 
-			print("\t\tOutput file: " + username_directory + "/" + lists_file + "\n")
+			print "\t\tOutput file: " + username_directory + "/" + lists_file + "\n"
 
 			csvFile.close()
 
@@ -506,7 +506,7 @@ class Collections:
 					response, data = client.request(url_with_cursor)
 					response_dictionary = json.loads(data)
 					if "Rate limit exceeded" in str(response_dictionary):
-						print("\n\t\tWaiting...")
+						print "\n\t\tWaiting..."
 						time.sleep(60)
 						continue
 					else:
@@ -531,13 +531,13 @@ class Collections:
 				except Exception as e:
 					rate_limit = show_error(e)
 					if rate_limit:
-						print("\t\tWaiting...")
+						print "\t\tWaiting..."
 						time.sleep(60)
 						continue
 
-			print("\t\t" + str(collections) + " public collections owned by the user") 
+			print "\t\t" + str(collections) + " public collections owned by the user" 
 
-			print("\t\tOutput file: " + username_directory + "/" + collections_file) 
+			print "\t\tOutput file: " + username_directory + "/" + collections_file 
 
 			csvFile.close()
 
@@ -612,7 +612,7 @@ class Activity:
 					else:
 						self.activity_url += 1
 
-			if 'media' in tweet.entities :
+			if tweet.entities.has_key('media') :
 				self.activity_media += 1
 
 			self.activity_hours[str(tweet.created_at.time().strftime('%H'))] += 1
@@ -671,7 +671,7 @@ class Followers:
 			csvWriter.writerow(["#", "ID", "USERNAME", "SCREEN NAME", "DESCRIPTION", "PROFILE IMAGE URL", "PROFILE BANNER URL", "CREATED AT", "LOCATION", "TIME_ZONE", "GEO ENABLED", "FOLLOWERS COUNT", "FRIENDS COUNT", "STATUSES COUNT", "LISTED COUNT", "FAVOURITES COUNT", "USER VERIFIED", "USER LANG"])
 
 			analyzed_user = 0
-			for userid in list(tweepy.Cursor(api.followers_ids, screen_name=username).items()):
+			for userid in tweepy.Cursor(api.followers_ids, screen_name=username).items():
 				try:
 					if int(analyzed_user) < int(limit):
 						user = api.get_user(userid)
@@ -683,7 +683,7 @@ class Followers:
 						sys.stdout.flush()
 
 						try:
-							img = urllib.request.urlopen(user.profile_image_url.replace("_normal.", ".")).read()
+							img = urllib2.urlopen(user.profile_image_url.replace("_normal.", ".")).read()
 							filename = str(user.id) + ".jpg" 
 							image = pics_directory + "/" +filename
 							if not os.path.exists(image):
@@ -699,12 +699,12 @@ class Followers:
 				except Exception as e:
 					rate_limit = show_error(e)
 					if rate_limit:
-						print("\t\tWaiting...")
+						print "\t\tWaiting..."
 						time.sleep(60)
 						continue
 
 
-			print("\n\n\t\tOutput file: " + pics_directory + "/" + followers_file) 
+			print "\n\n\t\tOutput file: " + pics_directory + "/" + followers_file 
 
 			csvFile.close()
 
@@ -745,7 +745,7 @@ class Friends:
 			csvWriter.writerow(["#", "ID", "USERNAME", "SCREEN NAME", "DESCRIPTION", "PROFILE IMAGE URL", "PROFILE BANNER URL", "CREATED AT", "LOCATION", "TIME_ZONE", "GEO ENABLED", "FOLLOWERS COUNT", "FRIENDS COUNT", "STATUSES COUNT", "LISTED COUNT", "FAVOURITES COUNT", "USER VERIFIED", "USER LANG"])
 
 			analyzed_user = 0
-			for userid in list(tweepy.Cursor(api.friends_ids, screen_name=username).items()):				
+			for userid in tweepy.Cursor(api.friends_ids, screen_name=username).items():				
 				try:
 					if int(analyzed_user) < int(limit):
 						user = api.get_user(userid)
@@ -756,7 +756,7 @@ class Friends:
 						sys.stdout.flush()
 
 						try:
-							img = urllib.request.urlopen(user.profile_image_url.replace("_normal.", ".")).read()
+							img = urllib2.urlopen(user.profile_image_url.replace("_normal.", ".")).read()
 							filename = str(user.id) + ".jpg" 
 							image = pics_directory + "/" +filename
 							if not os.path.exists(image):
@@ -772,11 +772,11 @@ class Friends:
 				except Exception as e:
 					rate_limit = show_error(e)
 					if rate_limit:
-						print("\t\tWaiting...")
+						print "\t\tWaiting..."
 						time.sleep(60)
 						continue
 
-			print("\n\n\t\tOutput file: " + pics_directory + "/" + friends_file) 
+			print "\n\n\t\tOutput file: " + pics_directory + "/" + friends_file 
 
 			csvFile.close()
 
@@ -829,7 +829,7 @@ class Social_Networks:
 				url = m['expanded_url']	
 
 				try:
-					response = urllib.request.urlopen(url)  
+					response = urllib2.urlopen(url)  
 					html = response.read()
 				except Exception as e:	
 					pass
@@ -884,14 +884,14 @@ class Social_Networks:
 								if not html:
 									# Identify Faceboook acount from 404 not found facebook page
 									try:
-										response = urllib.request.urlopen(url) 
+										response = urllib2.urlopen(url) 
 										html = response.read()
 									except Exception as e:	
 										pass
 									urls = re.search(';id=(.*)">', html)
 									if urls:
 										try:
-											response = urllib.request.urlopen("https://facebook.com/profile.php?id=" + urls.group(1)) 
+											response = urllib2.urlopen("https://facebook.com/profile.php?id=" + urls.group(1)) 
 											html = response.read()
 										except Exception as e:	
 											pass
@@ -900,7 +900,7 @@ class Social_Networks:
 											username = urls.group(1)									
 											link = "https://facebook.com/" + username
 											try:
-												response = urllib.request.urlopen(link)  
+												response = urllib2.urlopen(link)  
 												html = response.read()
 											except Exception as e:	
 												pass
@@ -918,7 +918,7 @@ class Social_Networks:
 											link = "https://facebook.com/" + username
 									else:
 										try:
-											response = urllib.request.urlopen("http://longurl.org/expand?url="+url) 
+											response = urllib2.urlopen("http://longurl.org/expand?url="+url) 
 											html2 = response.read()
 											urls = re.search('<a href="https://www.facebook.com/(.*)/posts/[0-9]*">https://', html2)
 										except Exception as e:
@@ -927,7 +927,7 @@ class Social_Networks:
 											username = urls.group(1)
 											link = "https://facebook.com/" + username
 											try:
-												response = urllib.request.urlopen(link)  
+												response = urllib2.urlopen(link)  
 												html = response.read()
 											except Exception as e:	
 												pass
@@ -946,7 +946,7 @@ class Social_Networks:
 									self.see_again = 0
 									username = ""
 									try:
-										response = urllib.request.urlopen("https://foursquare.com/"+self.user_sn[status.user.screen_name][1][0])  
+										response = urllib2.urlopen("https://foursquare.com/"+self.user_sn[status.user.screen_name][1][0])  
 										html = response.read()
 									except Exception as e:
 										pass
@@ -955,7 +955,7 @@ class Social_Networks:
 										username = urls.group(1)
 										link = "http://www.facebook.com/profile.php?id=" + username
 										try:
-											response = urllib.request.urlopen(link)  
+											response = urllib2.urlopen(link)  
 											html = response.read()
 										except Exception as e:	
 											pass
@@ -970,7 +970,7 @@ class Social_Networks:
 										if tmp:
 											name = tmp.group(1)
 										try:
-											response = urllib.request.urlopen(link)  
+											response = urllib2.urlopen(link)  
 											html = response.read()
 										except Exception as e:	
 											pass
@@ -990,8 +990,8 @@ class Social_Networks:
 								
 								if not html:
 									try:
-										req = urllib.request.Request(url, headers={ 'User-Agent': 'Mozilla/5.0' })
-										html = urllib.request.urlopen(req).read()
+										req = urllib2.Request(url, headers={ 'User-Agent': 'Mozilla/5.0' })
+										html = urllib2.urlopen(req).read()
 										
 										tmp = re.search('linkedin.com/in/(.*)"/><link rel="stylesheet"', html)
 										if tmp:
@@ -1022,7 +1022,7 @@ class Social_Networks:
 										username = urls.group(1)
 										link = "https://runkeeper.com/user/" + username
 										try:
-											response = urllib.request.urlopen(link)  
+											response = urllib2.urlopen(link)  
 											html = response.read()
 										except Exception as e:	
 											pass
@@ -1101,7 +1101,7 @@ class Social_Networks:
 														tmp = urls.group(1)	
 														try:
 															url = "https://kindle.amazon.com/profile/redirect/" + tmp
-															response = urllib.request.urlopen(str(url)) 
+															response = urllib2.urlopen(str(url)) 
 															html = response.read()
 														except Exception as e:
 															pass
@@ -1112,7 +1112,7 @@ class Social_Networks:
 																username = tmp.group(1)
 																link = "https://kindle.amazon.com/profile/" + urls.group(1)
 																try:
-																	response = urllib.request.urlopen(link) 
+																	response = urllib2.urlopen(link) 
 																	html = response.read()
 																except Exception as e:
 																	pass
@@ -1138,7 +1138,7 @@ class Social_Networks:
 															tmp = urls.group(1)	
 															try:
 																url = "http://www.youtube.com/channel/" + tmp
-																response = urllib.request.urlopen(str(url)) 
+																response = urllib2.urlopen(str(url)) 
 																html = response.read()
 															except Exception as e:
 																pass
@@ -1153,7 +1153,7 @@ class Social_Networks:
 																	link = "http://www.youtube.com/user/" + username
 															try:
 																url = "http://www.youtube.com/user/" + username
-																response = urllib.request.urlopen(url) 
+																response = urllib2.urlopen(url) 
 																html = response.read()
 															except Exception as e:
 																pass
@@ -1184,7 +1184,7 @@ class Social_Networks:
 																link = "https://plus.google.com/" + username	
 																try:
 																	url = "https://plus.google.com/" + tmp
-																	response = urllib.request.urlopen(url) 
+																	response = urllib2.urlopen(url) 
 																	html = response.read()
 																except Exception as e:
 																	pass
@@ -1213,7 +1213,7 @@ class Social_Networks:
 																	username = urls.group(1)
 																	link = "http://www.frontback.me/" + username
 																try:
-																	response = urllib.request.urlopen(link) 
+																	response = urllib2.urlopen(link) 
 																	html = response.read()
 																except Exception as e:
 																	pass
@@ -1419,7 +1419,7 @@ class Geolocation:
 					location_coord += " "
 				location = location_coord + "\t" + splace
 
-				if location in list(self.toplocations.keys()):
+				if location in self.toplocations.keys():
 					self.toplocations[location] += 1
 					if tweet.created_at < self.toplocationsstartdate[location]:
 						self.toplocationsstartdate[location] = tweet.created_at 
@@ -1468,7 +1468,7 @@ class Geolocation:
 			media_url = ""
 			keywords_instagram = []
 
-			if 'media' in tweet.entities :
+			if tweet.entities.has_key('media') :
 				medias = tweet.entities['media']
 				for m in medias :
 					media_url = m['media_url']
@@ -1479,7 +1479,7 @@ class Geolocation:
 					if media.find("instagram") > 0:
 						# Instagram
 						try:
-							response = urllib.request.urlopen(str(media))  
+							response = urllib2.urlopen(str(media))  
 							html = response.read()
 							media_url = get_url_media_from_instagram(html)
 							#tagged_users, owner = get_tagged_users_from_instagram(html)
@@ -1534,7 +1534,7 @@ class Geolocation:
 			
 			media_url = []
 			# Get media content from tweet
-			if 'media' in tweet.entities :
+			if tweet.entities.has_key('media') :
 				medias = tweet.entities['media']
 				for m in medias :
 					media_url.append(m['media_url'])
@@ -1607,8 +1607,8 @@ class Geolocation:
 	def set_global_information(self, top):
 		try:
 
-			sort_loc = OrderedDict(sorted(list(self.toplocations.items()), key=itemgetter(1), reverse=True))
-			sort_top = list(sort_loc.items())[0:int(top)]
+			sort_loc = OrderedDict(sorted(self.toplocations.items(), key=itemgetter(1), reverse=True))
+			sort_top = sort_loc.items()[0:int(top)]
 
 			for place, value in sort_top:
 				startdate = self.toplocationsstartdate[place]
@@ -1752,19 +1752,19 @@ class Search_GeoTweets:
 			l = find.split()
 			find = l
 
-			for status in list(tweepy.Cursor(api.search,
+			for status in tweepy.Cursor(api.search,
 				q="",
 				geocode=latlonkm,
 				#count=200,
 				since=sdate,
 				until=edate,
-				result_type='recent').items()):
+				result_type='recent').items():
 
 				add = 1
 				retweeted = 0
 
 				# Media
-				if 'media' in status.entities :
+				if status.entities.has_key('media') :
 					media = 1
 				else:
 					media = 0
@@ -1866,7 +1866,7 @@ class Search_GeoTweets:
 						if parameters.output_media:
 							# Show media content included in tweets					
 										
-							if 'media' in status.entities :
+							if status.entities.has_key('media') :
 								medias = status.entities['media']
 								for m in medias :
 									media_url = m['media_url']
@@ -1876,7 +1876,7 @@ class Search_GeoTweets:
 												videos.append([str(content['url']), content['bitrate']])
 
 										sort_vid = OrderedDict(sorted(videos, key=itemgetter(1), reverse=True))
-										vid_top = list(sort_vid.items())[0:1]
+										vid_top = sort_vid.items()[0:1]
 
 										media_type = "Video" 
 										media_url = str(vid_top[0][0])
@@ -1892,7 +1892,7 @@ class Search_GeoTweets:
 										# Instagram
 										try:
 											
-											response = urllib.request.urlopen(str(media))  
+											response = urllib2.urlopen(str(media))  
 											html = response.read()
 											
 											media_url = get_url_media_from_instagram(html)
@@ -1945,7 +1945,7 @@ class Search_GeoTweets:
 						
 						keywords_list = []
 						# Get keywords from twitter
-						if 'hashtags' in status.entities:
+						if status.entities.has_key('hashtags'):
 							for h in status.entities['hashtags']:
 								keywords_list.append(h['text'].lower())
 
@@ -1955,7 +1955,7 @@ class Search_GeoTweets:
 
 						keywords_tmp = ""
 						if self.user_keywords:
-							if status.user.screen_name in self.user_keywords:
+							if self.user_keywords.has_key(status.user.screen_name):
 								keywords_tmp = self.user_keywords[status.user.screen_name]
 								# List merge without dupe
 								keywords_list = list(set(keywords_list + keywords_tmp))					
@@ -2018,13 +2018,13 @@ class Search_GeoTweets:
 						with_words += " and " + string
 
 
-			for status in list(tweepy.Cursor(api.search,
+			for status in tweepy.Cursor(api.search,
 				q=search + with_words + without_words,
 				#geocode=latlonkm,
 				#count=100,
 				since=sdate,
 				until=edate,
-				result_type='recent').items()):
+				result_type='recent').items():
 
 
 				add = 1
@@ -2037,12 +2037,12 @@ class Search_GeoTweets:
 
 				if hasattr (status, 'retweeted_status'): 
 					retweeted = 1
-					if 'media' in status.retweeted_status.entities:
+					if status.retweeted_status.entities.has_key('media'):
 						media = 1
 	
 				else: 
 					retweeted = 0
-					if 'media' in status.entities:
+					if status.entities.has_key('media'):
 						media = 1
 										
 				for f in find:
@@ -2137,7 +2137,7 @@ class Search_GeoTweets:
 												videos.append([str(content['url']), content['bitrate']])
 									
 										sort_vid = OrderedDict(sorted(videos, key=itemgetter(1), reverse=True))
-										vid_top = list(sort_vid.items())[0:1]
+										vid_top = sort_vid.items()[0:1]
 										media_type = "Video" 
 										media_url = str(vid_top[0][0])
 									
@@ -2159,7 +2159,7 @@ class Search_GeoTweets:
 								# Instagram
 								try:
 										
-									response = urllib.request.urlopen(str(media))  
+									response = urllib2.urlopen(str(media))  
 									html = response.read()
 									media_url = get_url_media_from_instagram(html)
 									tagged_users, owner, profile_image = get_tagged_users_from_instagram(html)
@@ -2213,7 +2213,7 @@ class Search_GeoTweets:
 						
 						keywords_list = []
 						# Get keywords from twitter
-						if 'hashtags' in status.entities:
+						if status.entities.has_key('hashtags'):
 							for h in status.entities['hashtags']:
 								keywords_list.append(h['text'].lower())
 
@@ -2223,7 +2223,7 @@ class Search_GeoTweets:
 
 						keywords_tmp = ""
 						if self.user_keywords:
-							if status.user.screen_name in self.user_keywords:
+							if self.user_keywords.has_key(status.user.screen_name):
 								keywords_tmp = self.user_keywords[status.user.screen_name]
 								# List merge without dupe
 								keywords_list = list(set(keywords_list + keywords_tmp))					
@@ -2361,8 +2361,8 @@ class Hashtags:
 			for h in self.hashtags:				
 				self.hashtags_top[h] = self.hashtags_count[h.upper()]
 
-			sort_has = OrderedDict(sorted(list(self.hashtags_top.items()), key=itemgetter(1), reverse=True))
-			self.hashtags_top = list(sort_has.items())[0:10]
+			sort_has = OrderedDict(sorted(self.hashtags_top.items(), key=itemgetter(1), reverse=True))
+			self.hashtags_top = sort_has.items()[0:10]
 			self.hashtags_results3 = len (self.hashtags_top)
 											
 		except Exception as e:
@@ -2481,8 +2481,8 @@ class Mentions:
 			for h in self.mentions:				
 				self.mentions_top[h] = self.mentions_count[h.upper()]
 
-			sort_has = OrderedDict(sorted(list(self.mentions_top.items()), key=itemgetter(1), reverse=True))
-			self.mentions_top = list(sort_has.items())[0:10]
+			sort_has = OrderedDict(sorted(self.mentions_top.items(), key=itemgetter(1), reverse=True))
+			self.mentions_top = sort_has.items()[0:10]
 			self.mentions_results3 = len (self.mentions_top)
 											
 		except Exception as e:
@@ -2513,10 +2513,10 @@ class User_Tweets:
 			source_app = ""
 
 
-			if 'media' in tweet.entities :
+			if tweet.entities.has_key('media') :
 				media = 1
 						
-				if 'media' in tweet.entities :
+				if tweet.entities.has_key('media') :
 					medias = tweet.entities['media']
 					for m in medias :
 						media_url = m['media_url']
@@ -2526,7 +2526,7 @@ class User_Tweets:
 									videos.append([str(content['url']), content['bitrate']])
 
 							sort_vid = OrderedDict(sorted(videos, key=itemgetter(1), reverse=True))
-							vid_top = list(sort_vid.items())[0:1]
+							vid_top = sort_vid.items()[0:1]
 
 							media_type = "Video" 
 							media_url = str(vid_top[0][0])
@@ -2540,7 +2540,7 @@ class User_Tweets:
 						if media.find("instagram") > 0:
 							# Instagram
 							try:
-								response = urllib.request.urlopen(str(media))  
+								response = urllib2.urlopen(str(media))  
 								html = response.read()
 								media_url = get_url_media_from_instagram(html)
 								if media_url.find(".mp4") > 0:
@@ -2722,7 +2722,7 @@ class Words_Tweets:
 				for word in words:
 					freq = words.count(word)
 
-					if word in self.top_words:
+					if self.top_words.has_key(word):
 						freq = self.top_words[word] + freq
 						datefrom = self.top_dates[word][0]
 						dateto = self.top_dates[word][1]
@@ -2774,7 +2774,7 @@ class Favorites:
 								tweet_time = tweet.created_at.time()
 								media_url=""
 
-								if 'media' in tweet.entities :
+								if tweet.entities.has_key('media') :
 									medias = tweet.entities['media']
 									for m in medias :
 										media_url = m['media_url']
@@ -2786,7 +2786,7 @@ class Favorites:
 				except Exception as e:
 					rate_limit = show_error(e)
 					if rate_limit:
-						print("\t\tWaiting...")
+						print "\t\tWaiting..."
 						time.sleep(60)
 						continue
 				
@@ -2876,13 +2876,13 @@ class User_Conversations:
 							search_until = tmp.strftime('%Y-%m-%d')
 
 							# Find others replies
-							for status in list(tweepy.Cursor(parameters.api.search,
+							for status in tweepy.Cursor(parameters.api.search,
 								q="@" + search_user_screen_name,
 								since_id=search_tweet_id,
 								count=100,
 								since=search_since,
 								until=search_until,
-								result_type='recent').items()):			
+								result_type='recent').items():			
 
 								if status.in_reply_to_status_id == search_tweet_id:
 									tweet_to_append = self.make_tweet_to_append(status, "")
@@ -2918,7 +2918,7 @@ class User_Relations:
 			api = parameters.api
 			url = "https://mobile.twitter.com/search?f=tweets&q=to:" + parameters.username
 
-			response = urllib.request.urlopen(url)
+			response = urllib2.urlopen(url)
 			html = response.read()
 
 			followed = []
@@ -3102,7 +3102,7 @@ class User_Images:
 				in_reply_to_screen_name = reply	
 
 	
-			if 'media' in tweet.entities :
+			if tweet.entities.has_key('media') :
 				medias = tweet.entities['media']
 				for m in medias :
 					media_url = m['media_url']
@@ -3114,14 +3114,14 @@ class User_Images:
 								videos.append([str(content['url']), content['bitrate']])
 
 						sort_vid = OrderedDict(sorted(videos, key=itemgetter(1), reverse=True))
-						vid_top = list(sort_vid.items())[0:1]
+						vid_top = sort_vid.items()[0:1]
 						media_url = str(vid_top[0][0])
 
 					else:
 						if self.images == "d" or self.meta:
 							if not os.path.isdir(self.username):
 								os.mkdir(self.username)
-							img = urllib.request.urlopen(media_url).read()
+							img = urllib2.urlopen(media_url).read()
 							filename = media_url.split('/')[-1]
 							self.pics_directory = os.path.dirname(os.path.abspath(__file__)) + "/" + self.username
 							image = self.pics_directory + "/" +filename
@@ -3136,7 +3136,7 @@ class User_Images:
 					if media.find("instagram") > 0:
 						# Instagram
 						try:
-							response = urllib.request.urlopen(str(media))  
+							response = urllib2.urlopen(str(media))  
 							html = response.read()
 							media_url = get_url_media_from_instagram(html)
 							if media_url.find(".mp4") > 0:
@@ -3198,14 +3198,14 @@ class User_Images:
 					if fileExtension in (".jpg", ".jpeg"):			
 						if img._getexif():
 							metadata = 1
-							exif = { ExifTags.TAGS[k]: v for k, v in list(img._getexif().items()) if k in ExifTags.TAGS }
-							self.meta_description[p[0]] = str(exif['ImageDescription'])
-							self.meta_copyright[p[0]] = str(exif['Copyright'])
-							self.meta_date[p[0]] = str(exif['ImageDescription'])
-							self.meta_make[p[0]] = str(exif['Make'])
-							self.meta_model[p[0]] = str(exif['Model'])
-							self.meta_software[p[0]] = str(exif['Software'])
-							self.meta_distance[p[0]] = str(exif['SubjectDistance'][0]/float(exif['SubjectDistance'][1])) + " meters"
+							exif = { ExifTags.TAGS[k]: v for k, v in img._getexif().items() if k in ExifTags.TAGS }
+							self.meta_description[p[0]] = unicode(exif['ImageDescription'])
+							self.meta_copyright[p[0]] = unicode(exif['Copyright'])
+							self.meta_date[p[0]] = unicode(exif['ImageDescription'])
+							self.meta_make[p[0]] = unicode(exif['Make'])
+							self.meta_model[p[0]] = unicode(exif['Model'])
+							self.meta_software[p[0]] = unicode(exif['Software'])
+							self.meta_distance[p[0]] = unicode(exif['SubjectDistance'][0]/float(exif['SubjectDistance'][1])) + " meters"
 											
 					self.meta_size[p[0]] = str(img.size[0]) + "x" + str(img.size[1]) + " px"
 					if 'icc_profile' in img.info:
@@ -3218,7 +3218,7 @@ class User_Images:
 							datetime = struct.unpack('>hhhhhh',icc_profile[24:36])
 							tmp_tuple = (0, 0, 0)
 							final_tuple = datetime + tmp_tuple
-							self.meta_iccdate[p[0]] = str(time.strftime('%Y/%m/%d %H:%M:%S', final_tuple))
+							self.meta_iccdate[p[0]] = unicode(time.strftime('%Y/%m/%d %H:%M:%S', final_tuple))
 					
 					# Checkf for GPS information
 					try:
@@ -3228,12 +3228,12 @@ class User_Images:
 						longitudeRef = metadata.__getitem__("Exif.GPSInfo.GPSLongitudeRef")
 
 						latitude = str(latitude).split("=")[1][1:-1].split(" ");
-						latitude = [str(float(Fraction(f))) for f in latitude]
-						latitude = latitude[0] + "\u00b0" + latitude[1] + "'" + latitude[2] + '"' + " " + str(latitudeRef).split("=")[1][1:-1]
+						latitude = map(lambda f: str(float(Fraction(f))), latitude)
+						latitude = latitude[0] + u"\u00b0" + latitude[1] + "'" + latitude[2] + '"' + " " + str(latitudeRef).split("=")[1][1:-1]
 
 						longitude = str(longitude).split("=")[1][1:-1].split(" ");
-						longitude = [str(float(Fraction(f))) for f in longitude]
-						longitude = longitude[0] + "\u00b0" + longitude[1] + "'" + longitude[2] + '"' + " " + str(longitudeRef).split("=")[1][1:-1]
+						longitude = map(lambda f: str(float(Fraction(f))), longitude)
+						longitude = longitude[0] + u"\u00b0" + longitude[1] + "'" + longitude[2] + '"' + " " + str(longitudeRef).split("=")[1][1:-1]
 
 						latitude_value = dms_to_decimal(*metadata.__getitem__("Exif.GPSInfo.GPSLatitude").value + [metadata.__getitem__("Exif.GPSInfo.GPSLatitudeRef").value]);
 						longitude_value = dms_to_decimal(*metadata.__getitem__("Exif.GPSInfo.GPSLongitude").value + [metadata.__getitem__("Exif.GPSInfo.GPSLongitudeRef").value]);
@@ -3277,14 +3277,14 @@ class User_Images:
 				if fileExtension in (".jpg", ".jpeg"):			
 					if img._getexif():
 						metadata = 1
-						exif = { ExifTags.TAGS[k]: v for k, v in list(img._getexif().items()) if k in ExifTags.TAGS }
-						self.meta_profile_image.append(str(exif['ImageDescription']))
-						self.meta_profile_image.append(str(exif['Copyright']))
-						self.meta_profile_image.append(str(exif['DateTimeOriginal']))
-						self.meta_profile_image.append(str(exif['Make']))
-						self.meta_profile_image.append(str(exif['Model']))
-						self.meta_profile_image.append(str(exif['Software']))
-						self.meta_profile_image.append(str(exif['SubjectDistance'][0]/float(exif['SubjectDistance'][1])) + " meters")
+						exif = { ExifTags.TAGS[k]: v for k, v in img._getexif().items() if k in ExifTags.TAGS }
+						self.meta_profile_image.append(unicode(exif['ImageDescription']))
+						self.meta_profile_image.append(unicode(exif['Copyright']))
+						self.meta_profile_image.append(unicode(exif['DateTimeOriginal']))
+						self.meta_profile_image.append(unicode(exif['Make']))
+						self.meta_profile_image.append(unicode(exif['Model']))
+						self.meta_profile_image.append(unicode(exif['Software']))
+						self.meta_profile_image.append(unicode(exif['SubjectDistance'][0]/float(exif['SubjectDistance'][1])) + " meters")
 						
 					else:	
 						self.meta_profile_image.append("")
@@ -3316,12 +3316,12 @@ class User_Images:
 					longitudeRef = metadata.__getitem__("Exif.GPSInfo.GPSLongitudeRef")
 	
 					latitude = str(latitude).split("=")[1][1:-1].split(" ");
-					latitude = [str(float(Fraction(f))) for f in latitude]
-					latitude = latitude[0] + "\u00b0" + latitude[1] + "'" + latitude[2] + '"' + " " + str(latitudeRef).split("=")[1][1:-1]
+					latitude = map(lambda f: str(float(Fraction(f))), latitude)
+					latitude = latitude[0] + u"\u00b0" + latitude[1] + "'" + latitude[2] + '"' + " " + str(latitudeRef).split("=")[1][1:-1]
 	
 					longitude = str(longitude).split("=")[1][1:-1].split(" ");
-					longitude = [str(float(Fraction(f))) for f in longitude]
-					longitude = longitude[0] + "\u00b0" + longitude[1] + "'" + longitude[2] + '"' + " " + str(longitudeRef).split("=")[1][1:-1]
+					longitude = map(lambda f: str(float(Fraction(f))), longitude)
+					longitude = longitude[0] + u"\u00b0" + longitude[1] + "'" + longitude[2] + '"' + " " + str(longitudeRef).split("=")[1][1:-1]
 	
 					latitude_value = dms_to_decimal(*metadata.__getitem__("Exif.GPSInfo.GPSLatitude").value + [metadata.__getitem__("Exif.GPSInfo.GPSLatitudeRef").value]);
 					longitude_value = dms_to_decimal(*metadata.__getitem__("Exif.GPSInfo.GPSLongitude").value + [metadata.__getitem__("Exif.GPSInfo.GPSLongitudeRef").value]);
@@ -3428,7 +3428,7 @@ def get_video_url(url):
 	try:
 		video_url = ""
 		
-		response = urllib.request.urlopen(str(url))  
+		response = urllib2.urlopen(str(url))  
 		html = response.read()
 		if html.find(".mp4") >= 0:
 			begin = html.index('video-src="')
@@ -3467,7 +3467,7 @@ def generates_HTML_file(parameters, user, source, social, hashtag, mention, geol
 		conversations_messages = {}
 
 
-		for tid, conv in list(user_conversations.conversations.items()):
+		for tid, conv in user_conversations.conversations.items():
 			# Order conversations by datetime
 			tmp = sorted(conv, key=getKey)
 			user_conversations.conversations[tid] = tmp
@@ -3522,7 +3522,7 @@ def generates_HTML_file(parameters, user, source, social, hashtag, mention, geol
 		user_conversations.conversations = all_conv
 
 
-		for tid, conv in list(user_conversations.conversations.items()):
+		for tid, conv in user_conversations.conversations.items():
 			conversations_number += 1
 
 			# Order conversations by datetime
@@ -3696,7 +3696,7 @@ def generates_HTML_file(parameters, user, source, social, hashtag, mention, geol
 
 			# conversations
 			'output_conversation': parameters.output_conversation,
-			'conversations': list(user_conversations.conversations.items()),
+			'conversations': user_conversations.conversations.items(),
 			'conversations_number': conversations_number,
 			'conversations_users': conversations_users,
 			'conversations_messages': conversations_messages,
@@ -3759,7 +3759,7 @@ def save_image(url, username):
 		if not os.path.isdir(username):
 			os.mkdir(username)
 		
-		img = urllib.request.urlopen(url).read()
+		img = urllib2.urlopen(url).read()
 		filename = url.split('/')[-1]
 		pics_directory = os.path.dirname(os.path.abspath(__file__)) + "/" + username
 		image = pics_directory + "/" +filename
@@ -3816,34 +3816,34 @@ def get_information(args, parameters):
 			 ["", "", "", "", ""]] # Frontback
 		
 		if not args.username and not args.latlonkm and not args.global_timeline:
-			print("\tYou need to specify the target of analysis: 1) a user, 2) a place or 3) the global timeline.")
-			print("\t\t1) To obtain information about a user, yo need to specify an USERNAME (-u, --user parameter).\n\t\t   Examples:")
-			print("\t\t\t./tinfoleak.py -u jack -is --hashtags --mentions --media -t 400 --stime 08:00:00 --etime 20:30:00")
-			print("\t\t\t./tinfoleak.py --user stevewoz -i -s --social --top 10 -t 600 -a -o stevewoz-report.html")
-			print("\n\t\t2) To obtain information about a place, yo need to specify a LATLONKM (-p, --place parameter).\n\t\t   Examples:")
-			print("\t\t\t./tinfoleak.py -p 41.4036339,2.1721671,1km -s --media --find '[+]barcelona [+m]' -t 20")
-			print("\t\t\t./tinfoleak.py --place 41.4036339,2.1721671,0.5km --hashtags --mentions -t 20")
-			print("\n\t\t3) To obtain information about the global timeline, yo need to specify -g, --global parameter.\n\t\t   Examples:")
-			print("\t\t\t./tinfoleak.py -g --media --find '[+]happy [-r]' -t 800")
-			print("\t\t\t./tinfoleak.py --global -s --hashtags --mentions -t 600")
-			print("\n\tExecute './tinfoleak.py -h' to see the available options.")
+			print "\tYou need to specify the target of analysis: 1) a user, 2) a place or 3) the global timeline."
+			print "\t\t1) To obtain information about a user, yo need to specify an USERNAME (-u, --user parameter).\n\t\t   Examples:"
+			print "\t\t\t./tinfoleak.py -u jack -is --hashtags --mentions --media -t 400 --stime 08:00:00 --etime 20:30:00"
+			print "\t\t\t./tinfoleak.py --user stevewoz -i -s --social --top 10 -t 600 -a -o stevewoz-report.html"
+			print "\n\t\t2) To obtain information about a place, yo need to specify a LATLONKM (-p, --place parameter).\n\t\t   Examples:"
+			print "\t\t\t./tinfoleak.py -p 41.4036339,2.1721671,1km -s --media --find '[+]barcelona [+m]' -t 20"
+			print "\t\t\t./tinfoleak.py --place 41.4036339,2.1721671,0.5km --hashtags --mentions -t 20"
+			print "\n\t\t3) To obtain information about the global timeline, yo need to specify -g, --global parameter.\n\t\t   Examples:"
+			print "\t\t\t./tinfoleak.py -g --media --find '[+]happy [-r]' -t 800"
+			print "\t\t\t./tinfoleak.py --global -s --hashtags --mentions -t 600"
+			print "\n\tExecute './tinfoleak.py -h' to see the available options."
 		else:
 			if args.username:		
 				# Search info about a USER						
-				print("\tLooking info for @"  + args.username + ":\n")
+				print "\tLooking info for @"  + args.username + ":\n"
 				
 				if not args.information and not args.file and not args.number and not args.d and not args.sources and not args.hashtags_from_username and not args.mentions_from_username and not args.text and not args.meta and not args.conv and not args.socialnetworks and not args.followers_number and not args.friends_number and not args.lists and not args.collections and not args.likes_number and not args.words_number and not args.protected:
-					print("\tYou need to specify an operation. Execute './tinfoleak.py -h' to see the available operations.")
+					print "\tYou need to specify an operation. Execute './tinfoleak.py -h' to see the available operations."
 				else:
-					print("\n\t\tGetting account information...")
+					print "\n\t\tGetting account information..."
 					api = parameters.api.get_user(args.username)
 					user.set_user_information(api)
-					print("\t\tOK")
+					print "\t\tOK"
 
 					if args.sources or args.hashtags_from_username or args.mentions_from_username or args.d or args.file or args.number or args.text or args.meta or args.conv or args.socialnetworks or args.words_number:
 						page = 1
 						tweets_count = 0	
-						print("\n\t\tExecuting operations...")
+						print "\n\t\tExecuting operations..."
 
 						while True:
 							timeline = parameters.api.user_timeline(screen_name=args.username, include_rts=True, count=args.tweets_number, page=page)
@@ -3901,7 +3901,7 @@ def get_information(args, parameters):
 								break
 							page += 1
 							if tweets_count >= int(args.tweets_number):
-								print()
+								print
 								break
 
 						if args.meta: 
@@ -3921,7 +3921,7 @@ def get_information(args, parameters):
 							# Show geolocation information from user tweets
 							geolocation.generates_geofile(args.file, parameters)
 					
-						print("\r\t\tOK")												
+						print "\r\t\tOK"												
 
 					else:
 						if args.protected:
@@ -3932,22 +3932,22 @@ def get_information(args, parameters):
 			else:
 				if args.latlonkm:
 					# Search info about a PLACE
-					print("\n\t\tExecuting operations...")
+					print "\n\t\tExecuting operations..."
 					api = parameters.api.get_user("vaguileradiaz")
 					user.set_user_information(api)
 
 					search.set_geolocation_information(parameters.api, parameters.find, parameters.search, args.tweets_number, parameters.sdate, parameters.edate, parameters.stime, parameters.etime, hashtag, mentions, social_networks, parameters, user_images, parameters.hashtags_from_username, parameters.mentions_from_username, args.words_number, args.sources, source, args.text, activity)			
-					print("\n\t\tOK")
+					print "\n\t\tOK"
 
 				else:
 					if args.global_timeline:
 						# Search info about the global timeline
-						print("\n\t\tExecuting operations...")
+						print "\n\t\tExecuting operations..."
 						api = parameters.api.get_user("vaguileradiaz")
 						user.set_user_information(api)
 
 						search.set_search_information(parameters.api, parameters.find, parameters.search, args.tweets_number, parameters.sdate, parameters.edate, parameters.stime, parameters.etime, hashtag, mentions, social_networks, parameters, user_images, parameters.hashtags_from_username, parameters.mentions_from_username, args.words_number, args.sources, source, args.text, activity)	
-						print("\n\t\tOK")
+						print "\n\t\tOK"
 					
 
 			if args.sources:
@@ -3972,40 +3972,40 @@ def get_information(args, parameters):
 
 			if args.followers_number:
 				# Get followers for the specified user
-				print("\n\t\tGetting followers...")
+				print "\n\t\tGetting followers..."
 				followers.get_followers(args.username, parameters.api, parameters.output_followers)
 
 			if args.friends_number:
 				# Get friends for the specified user
-				print("\n\t\tGetting friends...")
+				print "\n\t\tGetting friends..."
 				friends.get_friends(args.username, parameters.api, parameters.output_friends)
 
 			if args.lists:
 				# Get info about the lists the authenticated user has been added to
-				print("\n\t\tGetting lists...")
+				print "\n\t\tGetting lists..."
 				lists.get_memberships(parameters.client, int(user.listed_count), args.username)
 				lists.get_ownerships(parameters.client, args.username)
 				lists.get_lists(parameters.client, args.username)
-				print("\r\t\tOK")
+				print "\r\t\tOK"
 
 			if args.collections:
 				# Get info about the collections created by the specified user
-				print("\n\t\tGetting collections...")
+				print "\n\t\tGetting collections..."
 				collections.get_collections(parameters.client, args.username)
-				print("\r\t\tOK")
+				print "\r\t\tOK"
 
 			if args.likes_number:
 				# Get favorites tweets
-				print("\n\t\tGetting favorites...")
+				print "\n\t\tGetting favorites..."
 				if user.favourites_count: 
 					favorites.set_favorites_information(parameters.api, args.username, int(args.likes_number))
 				else:
-					print("The user has not marked favorite tweets")
-				print("\n\r\t\tOK")
+					print "The user has not marked favorite tweets"
+				print "\n\r\t\tOK"
 
 			if args.words_number:
 								
-				wordlist = sorted(list(top_words.top_words.items()), key=operator.itemgetter(1))
+				wordlist = sorted(top_words.top_words.items(), key=operator.itemgetter(1))
 				wordlist.reverse()
 
 				max = int(args.words_number)
@@ -4019,14 +4019,14 @@ def get_information(args, parameters):
 			
 
 			if args.latlonkm or args.information or args.global_timeline or args.file or args.number or args.d or args.sources or args.hashtags_from_username or args.mentions_from_username or args.text or args.meta or args.conv or args.socialnetworks or args.likes_number or args.words_number or args.protected:
-				print("\n\t\tGenerating report...")
+				print "\n\t\tGenerating report..."
 				generates_HTML_file(parameters, user, source, social_networks, hashtag, mentions, geolocation, user_images, user_tweets, search, user_conversations, favorites, top_words, activity, user_relations)
 				if os.name == "nt":
 					html_dir = os.path.dirname(os.path.abspath(__file__)) + "\\" + parameters.html_output_directory + "\\" + str(parameters.output)
 				else:
 					html_dir = os.path.dirname(os.path.abspath(__file__)) + "/" + parameters.html_output_directory + "/" + str(parameters.output)
-				print("\t\tOK")
-				print("\n\n\tYour HTML report: " + html_dir) 
+				print "\t\tOK"
+				print "\n\n\tYour HTML report: " + html_dir 
 				
 	
 	except Exception as e:
@@ -4039,23 +4039,23 @@ def show_error(error):
 	""" Show error message """
 	try:
 		rate_limit = 0
-		print("\n\n\t\tOops! Something went wrong:")
+		print "\n\n\t\tOops! Something went wrong:"
 
 		if str(error).find("Name or service not known") >= 0:
-			print("\t\tDo you have Internet connection?")
+			print "\t\tDo you have Internet connection?"
 		else:
 			if str(error).find("Could not authenticate you") >= 0:
-				print("\t\tYou need to assign value to OAuth tokens. Please, read the README.txt file for more information.")
+				print "\t\tYou need to assign value to OAuth tokens. Please, read the README.txt file for more information."
 			else:	
-				print("\t\t" + str(sys.exc_info()[1][0][0]['message']))		
+				print "\t\t" + str(sys.exc_info()[1][0][0]['message'])		
 				if "Rate limit exceeded" in str(sys.exc_info()[1][0][0]['message']):
 					rate_limit = 1
-		print() 
+		print 
 
 		return rate_limit
 		
 	except Exception as e:
-		print("\t\t" + str(error) + "\n")
+		print "\t\t" + str(error) + "\n"
 		sys.exit(1)
 
 
@@ -4154,7 +4154,7 @@ def get_url_media_from_foursquare(url):
 		profile_image = ""
 
 		try:
-			response = urllib.request.urlopen(str(url))  
+			response = urllib2.urlopen(str(url))  
 			html = response.read()
 		except Exception as e:
 			return url_foursquare, owner, profile_image		
@@ -4198,7 +4198,7 @@ def get_url_facebook_from_foursquare(url):
 		profile_image = ""
 		
 		try:
-			response = urllib.request.urlopen(str(url))  
+			response = urllib2.urlopen(str(url))  
 			html = response.read()
 		except Exception as e:
 			return url_facebook, user_facebook, profile_image 
@@ -4215,8 +4215,8 @@ def get_url_facebook_from_foursquare(url):
 				}
 
 			try:
-				request = urllib.request.Request(url, headers=request_headers)
-				html = urllib.request.urlopen(request.read())
+				request = urllib2.Request(url, headers=request_headers)
+				html = urllib2.urlopen(request.read())
 				urls = re.search('content="0; URL=/(.*)?_fb_noscript=1"', html)
 				if urls:
 					user_facebook = str(urls.group(1))	
@@ -4237,7 +4237,7 @@ def get_user_from_facebook_url(url):
 		user_facebook = ""
 		html = ""
 		try:
-			response = urllib.request.urlopen(str(url)) 
+			response = urllib2.urlopen(str(url)) 
 			html = response.read()
 		except Exception as e:
 			pass
@@ -4248,7 +4248,7 @@ def get_user_from_facebook_url(url):
 				user_facebook = urls.group(1)
 		else:
 			try:
-				response = urllib.request.urlopen("http://longurl.org/expand?url="+url) 
+				response = urllib2.urlopen("http://longurl.org/expand?url="+url) 
 				html = response.read()
 				urls = re.search('<a href="https://www.facebook.com/(.*)/posts/[0-9]*">https://', html)
 				if urls:
@@ -4271,7 +4271,7 @@ def get_user_from_flickr_url(url):
 		user_flickr = ""
 		html = ""
 		try:
-			response = urllib.request.urlopen(str(url)) 
+			response = urllib2.urlopen(str(url)) 
 			html = response.read()
 		except Exception as e:
 			pass
@@ -4294,7 +4294,7 @@ def get_user_from_runkeeper_url(url):
 		user_runkeeper = ""
 		html = ""
 		try:
-			response = urllib.request.urlopen(str(url)) 
+			response = urllib2.urlopen(str(url)) 
 			html = response.read()
 		except Exception as e:
 			pass
@@ -4318,7 +4318,7 @@ def get_user_from_vine_url(url):
 		html = ""
 		
 		try:
-			response = urllib.request.urlopen(str(url)) 
+			response = urllib2.urlopen(str(url)) 
 			html = response.read()
 		except Exception as e:
 			pass
@@ -4344,7 +4344,7 @@ def get_user_from_periscope_url(url):
 		user_periscope = ""
 		html = ""
 		try:
-			response = urllib.request.urlopen(str(url)) 
+			response = urllib2.urlopen(str(url)) 
 			html = response.read()
 		except Exception as e:
 			pass
@@ -4366,7 +4366,7 @@ def get_user_from_kindle_url(url):
 		user_kindle = ""
 		html = ""
 		try:
-			response = urllib.request.urlopen(str(url)) 
+			response = urllib2.urlopen(str(url)) 
 			html = response.read()
 		except Exception as e:
 			pass
@@ -4376,7 +4376,7 @@ def get_user_from_kindle_url(url):
 			tmp = urls.group(1)	
 			try:
 				url = "https://kindle.amazon.com/profile/redirect/" + tmp
-				response = urllib.request.urlopen(str(url)) 
+				response = urllib2.urlopen(str(url)) 
 				html = response.read()
 			except Exception as e:
 				pass
@@ -4399,7 +4399,7 @@ def get_user_from_youtube_url(url):
 		html = ""
 
 		try:
-			response = urllib.request.urlopen(str(url)) 
+			response = urllib2.urlopen(str(url)) 
 			html = response.read()
 		except Exception as e:
 			pass
@@ -4409,7 +4409,7 @@ def get_user_from_youtube_url(url):
 			tmp = urls.group(1)	
 			try:
 				url = "http://www.youtube.com/channel/" + tmp
-				response = urllib.request.urlopen(str(url)) 
+				response = urllib2.urlopen(str(url)) 
 				html = response.read()
 			except Exception as e:
 				pass
@@ -4435,7 +4435,7 @@ def get_user_from_googleplus_url(url):
 		user = ""
 		html = ""
 		try:
-			response = urllib.request.urlopen(str(url)) 
+			response = urllib2.urlopen(str(url)) 
 			html = response.read()
 		except Exception as e:
 			pass
@@ -4445,7 +4445,7 @@ def get_user_from_googleplus_url(url):
 			tmp = urls.group(1)	
 			try:
 				url = "https://plus.google.com/" + tmp
-				response = urllib.request.urlopen(str(url)) 
+				response = urllib2.urlopen(str(url)) 
 				html = response.read()
 			except Exception as e:
 				pass
@@ -4467,7 +4467,7 @@ def get_user_from_frontback_url(url):
 		user = ""
 		html = ""
 		try:
-			response = urllib.request.urlopen(str(url)) 
+			response = urllib2.urlopen(str(url)) 
 			html = response.read()
 		except Exception as e:
 			pass
@@ -4490,7 +4490,7 @@ def get_url_media_from_youtube(url):
 		url_youtube = ""
 		
 		try:
-			response = urllib.request.urlopen(str(url))  
+			response = urllib2.urlopen(str(url))  
 			html = response.read()
 		except Exception as e:
 			return url_youtube
@@ -4514,10 +4514,9 @@ def main():
 		credits(parameters)
 
 		parser = argparse.ArgumentParser(
+			version='Tinfoleak v2.3',
 			formatter_class=argparse.RawTextHelpFormatter,
 			description='Tinfoleak: The most complete open-source tool for Twitter intelligence analysis.')
-
-		parser.add_argument('--version', action='version', version='Tinfoleak v2.3')
 		parser.add_argument('-u', '--user', dest="username", default='', help='Twitter user name. Example: "-u jack"')
 		parser.add_argument('-p', '--place', dest='latlonkm', help='Search tweets in a specific place filtering by LATitude, LONgitude, and KMs (distance). Example: "--place 41.4036299,2.1721725,0.5km"' )
 		parser.add_argument('-g', '--global', action='store_true', dest='global_timeline', help='Search in the global timeline')
@@ -4659,8 +4658,8 @@ def main():
 		tdelta = datetime.datetime.now() - sdatetime 
 		hours, remainder = divmod(tdelta.seconds, 3600)
 		minutes, seconds = divmod(remainder, 60)
-		print("\n\n\tElapsed time: %02d:%02d:%02d" % (hours, minutes, seconds))
-		print("\nSee you soon!\n")
+		print "\n\n\tElapsed time: %02d:%02d:%02d" % (hours, minutes, seconds)
+		print "\nSee you soon!\n"
 		
 		parameters.elapsedtime = (hours, minutes, seconds)
 		
